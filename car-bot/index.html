@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tessel Web App</title>
+  <script type="text/javascript">
+    function action(event) {
+      const button = event.target;
+      const dir = button.getAttribute('data-action');
+      console.log(`--> Executing action: ${dir}`);
+      switch(dir) {
+        case 'forward':
+          makeXHR('/forward');
+          break;
+        case 'reverse':
+          makeXHR('/reverse');
+          break;
+        case 'left':
+          makeXHR('/left');
+          break;
+        case 'right':
+          makeXHR('/right');
+          break;
+        case 'stop':
+          makeXHR('/stop');
+          break;
+      }
+    }
+
+    function makeXHR(url) {
+      // Create a new XHR for communicating requests to our Tessel server
+      var req = new XMLHttpRequest();
+
+      req.open('POST', url);
+
+      req.onload = function(e) {
+        if (req.readyState == 4 && req.status == 200) {
+          // const response = JSON.parse(req.responseText);
+          console.log(`--> Success: `);
+        } else {
+          console.log('Error', e); // If something went wrong, log that event to the console.
+        }
+      }
+      req.send(''); // Send our request to the server
+    }
+  </script>
+</head>
+<body>
+  <h1>Hello from Tessel!</h1>
+  <p>Press the button to start the car-bot</p>
+  <div>
+    <button onclick="action(event);" data-action="forward"> Forward </button>
+    <button onclick="action(event);" data-action="reverse"> Reverse </button>
+    <button onclick="action(event);" data-action="left"> Left </button>
+    <button onclick="action(event);" data-action="right"> Right </button>
+    <button onclick="action(event);" data-action="stop"> Stop </button>
+  </div>
+</body>
+</html>
