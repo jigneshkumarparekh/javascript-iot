@@ -5,6 +5,7 @@ const url = require('url');
 const board = new five.Board();
 
 board.on(`ready`, () => {
+  console.log(`--> Board is ready...`);
   const server = http.createServer((req, res) => {
     const urlParts = url.parse(req.url, true);
     const { method } = req;

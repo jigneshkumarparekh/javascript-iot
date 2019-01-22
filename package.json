@@ -19,5 +19,11 @@
   "bugs": {
     "url": "https://github.com/jigneshkumarparekh/javascript-iot/issues"
   },
-  "homepage": "https://github.com/jigneshkumarparekh/javascript-iot#readme"
+  "homepage": "https://github.com/jigneshkumarparekh/javascript-iot#readme",
+  "dependencies": {
+    "firmata": "^2.0.0",
+    "http": "0.0.0",
+    "johnny-five": "^1.0.0",
+    "url": "^0.11.0"
+  }
 }
