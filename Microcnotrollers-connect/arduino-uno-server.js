@@ -9,17 +9,23 @@ const port = 8080;
 
 board.on(`ready`, () => {
   console.log(`--> Board is ready...`);
+  
   app.get('*', (req, res) => {
-    const urlParts = url.parse(req.url, true);
-    const { method } = req;
+    console.log(`--> Serving the request: ${req.url}`);
+    // const urlParts = url.parse(req.url, true);
+    // const { method } = req;
 
-    if (method === 'POST' && urlParts.pathname === '/turnOn') {
-      res.end('Lamp turned on');
-    } else if(method === 'POST' && urlParts.pathname === '/turnOff') {
-      res.end('Lamp tunred off');
-    } else {
-      res.end('Hello! from Arduino...');
-    }
+    res.end('Hello! from Arduino...');
+  });
+
+  app.post('/turnOn', (req, res) => {
+    console.log(`--> Serving the request: ${req.url}`);
+    res.end('Lamp turned on');
+  });
+
+  app.post('/turnOff', (req, res) => {
+    console.log(`--> Serving the request: ${req.url}`);
+    res.end('Lamp turned off');
   });
 
  
