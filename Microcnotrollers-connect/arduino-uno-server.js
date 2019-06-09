@@ -1,11 +1,10 @@
 const five = require('johnny-five');
-const http = require('http');
 const url = require('url');
 const express = require('express');
 const app = express();
 const board = new five.Board();
 
-
+const port = 8080;
 
 
 board.on(`ready`, () => {
@@ -14,8 +13,6 @@ board.on(`ready`, () => {
     const urlParts = url.parse(req.url, true);
     const { method } = req;
 
-    console.log(`--> URL parts: `, urlParts);
-  
     if (method === 'POST' && urlParts.pathname === '/turnOn') {
       res.end('Lamp turned on');
     } else if(method === 'POST' && urlParts.pathname === '/turnOff') {
@@ -26,7 +23,7 @@ board.on(`ready`, () => {
   });
 
  
-  app.listen(8080, () => {
-    console.log(`--> Server is listening on port 8080`);
+  app.listen(port, () => {
+    console.log(`--> Server is listening on http://localhost:${port}`);
   });
 });
