@@ -1,0 +1,22 @@
+{
+  "name": "soil-moisture-sensor",
+  "version": "0.0.0",
+  "description": "Tessel project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "www.github.com/tessel/t2-cli"
+  },
+  "keywords": [
+    "Tessel"
+  ],
+  "license": "MIT",
+  "author": "Jigneshkumar Parekh",
+  "dependencies": {
+    "johnny-five": "1.1.0",
+    "tessel-io": "1.2.2"
+  }
+}
