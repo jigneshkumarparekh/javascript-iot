@@ -1,0 +1,24 @@
+{
+  "name": "face-recognition",
+  "version": "1.0.0",
+  "description": "Facial Recognition via NodeJS",
+  "main": "face-recognition.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Face",
+    "Recognition",
+    "IoT",
+    "JS",
+    "NodeBots"
+  ],
+  "author": "Jigneshkumar Parekh",
+  "license": "MIT",
+  "dependencies": {
+    "@tensorflow/tfjs-node": "1.2.7",
+    "canvas": "2.6.0",
+    "face-api.js": "0.20.1",
+    "node-fetch": "2.6.0"
+  }
+}
