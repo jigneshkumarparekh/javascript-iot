@@ -3,40 +3,57 @@ const Tessel = require('tessel-io');
 const fetch = require('node-fetch');
 const av = require('tessel-av');
 const uploadFiles = require('./upload-file');
+const path = require('path');
+const fs = require('fs');
+const chalk = require('chalk');
+
+let debounceTime = 10000, lastImageCaptureTime;
 
 const board = new five.Board({
   io: new Tessel()
 });
 
 board.on('ready', () => {
+  console.log(`--> Tessel 2 board is ready...`);
+
+
   // Create a new `motion` hardware instance.
-  const motion = new five.Motion(7);
+  const motion = new five.Motion({
+    pin: 'a7'
+  });
 
   // "calibrated" occurs once, at the beginning of a session,
   motion.on("calibrated", () => {
-    console.log("calibrated");
+    console.log("--> calibrated");
   });
 
   // "motionstart" events are fired when the "calibrated"
   // proximal area is disrupted, generally by some form of movement
   motion.on("motionstart", () => {
-    console.log("motionstart");
+    console.log("--> motionstart");
     captureAndUpload();
   });
 
   // "motionend" events are fired following a "motionstart" event
   // when no movement has occurred in X ms
   motion.on("motionend", () => {
-    console.log("motionend");
+    console.log("--> motionend");
   });
 
 });
 
 function captureAndUpload() {
+
+  // Debounce in case of constant movement...
+  if (lastImageCaptureTime && (Date.now() - lastImageCaptureTime) < debounceTime) {
+    return;
+  }
+
   const camera = new av.Camera();
   console.log(`--> Started capturing....`);
   const fileName = 'captured-via-door-event.jpg';
   const filePath = path.join(__dirname, fileName);
+  lastImageCaptureTime = Date.now();
   camera.capture()
     .pipe(fs.createWriteStream(filePath))
     .on('finish', () => {
