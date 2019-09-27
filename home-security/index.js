@@ -7,7 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
 
-let debounceTime = 10000, lastImageCaptureTime;
+let debounceTime = 5000, lastImageCaptureTime, isUploading = false;
 
 const board = new five.Board({
   io: new Tessel()
@@ -30,14 +30,14 @@ board.on('ready', () => {
   // "motionstart" events are fired when the "calibrated"
   // proximal area is disrupted, generally by some form of movement
   motion.on("motionstart", () => {
-    console.log("--> motionstart");
+    console.log("--> Motion start");
     captureAndUpload();
   });
 
   // "motionend" events are fired following a "motionstart" event
   // when no movement has occurred in X ms
   motion.on("motionend", () => {
-    console.log("--> motionend");
+    console.log("--> Motion end");
   });
 
 });
@@ -45,35 +45,46 @@ board.on('ready', () => {
 function captureAndUpload() {
 
   // Debounce in case of constant movement...
-  if (lastImageCaptureTime && (Date.now() - lastImageCaptureTime) < debounceTime) {
+  if (isUploading || (lastImageCaptureTime && (Date.now() - lastImageCaptureTime) < debounceTime)) {
     return;
   }
 
-  const camera = new av.Camera();
-  console.log(`--> Started capturing....`);
-  const fileName = 'captured-via-door-event.jpg';
-  const filePath = path.join(__dirname, fileName);
-  lastImageCaptureTime = Date.now();
-  camera.capture()
-    .pipe(fs.createWriteStream(filePath))
-    .on('finish', () => {
-      console.log(`--> File saved....`);
-      console.log(chalk.green(`--> Uploading to gDrive`));
-      uploadFiles.uploadToGDrive(fileName)
-        .then(fileData => {
-          console.log(chalk.green('--> File created: ', fileData.name, ' with URL: ', fileData.webViewLink));
-          postDataToIFTTT(fileData.webViewLink);
+  isUploading = true;
+  try {
+    const camera = new av.Camera();
+    console.log(`--> Started capturing....`);
+    const fileName = 'captured-via-door-event.jpg';
+    const filePath = path.join(__dirname, fileName);
+    lastImageCaptureTime = Date.now();
+    camera.capture()
+      .pipe(fs.createWriteStream(filePath))
+      .on('finish', () => {
+        console.log(`--> File saved....`);
+        console.log(chalk.green(`--> Uploading to gDrive`));
+        uploadFiles.uploadToGDrive(fileName)
+          .then(fileData => {
+            console.log(chalk.green('--> File created: ', fileData.name, ' with URL: ', fileData.webViewLink));
+            postDataToIFTTT(fileData.webViewLink);
 
-          // Now, delete the captured image...
-          if (fs.existsSync(filePath)) {
-            fs.unlink(filePath, (err) => {
-              if (err) throw err;
-              console.log(`${filePath} was deleted`);
-            });
-          }
-        })
-        .catch(err => console.log(chalk.red(err)));
-    });
+            // Now, delete the captured image...
+            if (fs.existsSync(filePath)) {
+              fs.unlink(filePath, (err) => {
+                if (err) throw err;
+                console.log(`${filePath} was deleted`);
+              });
+            }
+            isUploading = false;
+          })
+          .catch(err => {
+            console.log(chalk.red(err));
+            isUploading = false;
+            throw err;
+          });
+      });
+  } catch (error) {
+    console.log(`--> Some unknown error: `, error);
+    isUploading = false;
+  }
 }
 
 function postDataToIFTTT(fileUrl) {
