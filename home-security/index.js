@@ -2,12 +2,14 @@ const five= require('johnny-five');
 const Tessel = require('tessel-io');
 const fetch = require('node-fetch');
 const av = require('tessel-av');
-const uploadFiles = require('./upload-file');
 const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
 
-let debounceTime = 5000, lastImageCaptureTime, isUploading = false;
+const uploadFiles = require('./upload-file');
+
+
+let debounceTime = 5000, lastImageCaptureTime, isUploading = false, motionOn = false;
 
 const board = new five.Board({
   io: new Tessel()
@@ -30,13 +32,23 @@ board.on('ready', () => {
   // "motionstart" events are fired when the "calibrated"
   // proximal area is disrupted, generally by some form of movement
   motion.on("motionstart", () => {
+    motionOn = true;
     console.log("--> Motion start");
-    captureAndUpload();
+
+    // Check if motion is still on after X seconds to prevent the false alarm.
+    // This is not needed if motion sensor is located inside.
+    setTimeout(() => {
+      if (motionOn) {
+        console.log(`--> Something really wrong...`);
+        captureAndUpload();
+      }
+    }, 4000);
   });
 
   // "motionend" events are fired following a "motionstart" event
   // when no movement has occurred in X ms
   motion.on("motionend", () => {
+    motionOn = false;
     console.log("--> Motion end");
   });
 
@@ -60,6 +72,7 @@ function captureAndUpload() {
       .pipe(fs.createWriteStream(filePath))
       .on('finish', () => {
         console.log(`--> File saved....`);
+
         console.log(chalk.green(`--> Uploading to gDrive`));
         uploadFiles.uploadToGDrive(fileName)
           .then(fileData => {
