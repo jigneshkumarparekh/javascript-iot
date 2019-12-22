@@ -8,7 +8,6 @@ const chalk = require('chalk');
 
 const uploadFiles = require('./upload-file');
 
-
 let debounceTime = 5000, lastImageCaptureTime, isUploading = false, motionOn = false;
 
 const board = new five.Board({
@@ -31,9 +30,11 @@ board.on('ready', () => {
 
   // "motionstart" events are fired when the "calibrated"
   // proximal area is disrupted, generally by some form of movement
-  motion.on("motionstart", () => {
+  motion.on("motionstart", async () => {
     motionOn = true;
     console.log("--> Motion start");
+
+    const windSpeed = await getWeather();
 
     // Check if motion is still on after X seconds to prevent the false alarm.
     // This is not needed if motion sensor is located inside.
@@ -42,7 +43,7 @@ board.on('ready', () => {
         console.log(`--> Something really wrong...`);
         captureAndUpload();
       }
-    }, 4000);
+    }, windSpeed > 10 ? 30000 : 4000);
   });
 
   // "motionend" events are fired following a "motionstart" event
@@ -109,5 +110,15 @@ function postDataToIFTTT(fileUrl) {
       headers: { 'Content-Type': 'application/json' }
     }
   )
-    .then(() => console.log(chalk.green(`--> Data posted to IFTTT - Webhooks for event "mailbox"`)));
+  .then(() => console.log(chalk.green(`--> Data posted to IFTTT - Webhooks for event "mailbox"`)));
+}
+
+function getWeather() {
+  const apiKey = "bcd076b2b09ab4811091acbb32bd8cf7";
+  const city = "5392593" // "San Ramon,US";
+  const url = `http://api.openweathermap.org/data/2.5/weather?id=${city}&appid=${apiKey}`;
+
+  return fetch(url)
+    .then(res => res.json())
+    .then(data => data.wind.speed);
 }
