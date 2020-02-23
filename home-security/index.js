@@ -1,3 +1,5 @@
+'use strict';
+
 const five= require('johnny-five');
 const Tessel = require('tessel-io');
 const fetch = require('node-fetch');
@@ -14,8 +16,13 @@ const board = new five.Board({
   io: new Tessel()
 });
 
-board.on('ready', () => {
+board.on('ready', async () => {
   console.log(`--> Tessel 2 board is ready...`);
+
+  let windSpeed = await getWeather();
+  setInterval(() => {
+    windSpeed = getWeather();
+  }, 11000);
 
 
   // Create a new `motion` hardware instance.
@@ -34,8 +41,6 @@ board.on('ready', () => {
     motionOn = true;
     console.log("--> Motion start");
 
-    const windSpeed = await getWeather();
-
     // Check if motion is still on after X seconds to prevent the false alarm.
     // This is not needed if motion sensor is located inside.
     setTimeout(() => {
@@ -43,7 +48,7 @@ board.on('ready', () => {
         console.log(`--> Something really wrong...`);
         captureAndUpload();
       }
-    }, windSpeed > 10 ? 30000 : 4000);
+    }, windSpeed > 10 ? 30000 : debounceTime);
   });
 
   // "motionend" events are fired following a "motionstart" event
