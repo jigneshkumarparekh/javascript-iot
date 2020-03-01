@@ -10,20 +10,22 @@ const chalk = require('chalk');
 
 const uploadFiles = require('./upload-file');
 
-let debounceTime = 5000, lastImageCaptureTime, isUploading = false, motionOn = false;
+let debounceTime = 10000, lastImageCaptureTime, isUploading = false, motionOn = false;
 
 const board = new five.Board({
   io: new Tessel()
 });
 
+
 board.on('ready', async () => {
   console.log(`--> Tessel 2 board is ready...`);
 
   let windSpeed = await getWeather();
-  setInterval(() => {
-    windSpeed = getWeather();
-  }, 11000);
-
+  setInterval(async () => {
+    console.log(`--> Getting new weather...`);
+    windSpeed = await getWeather();
+    console.log(`--> Got new weather data > ${windSpeed}`);
+  }, 660000); // 11 min.
 
   // Create a new `motion` hardware instance.
   const motion = new five.Motion({
@@ -43,12 +45,13 @@ board.on('ready', async () => {
 
     // Check if motion is still on after X seconds to prevent the false alarm.
     // This is not needed if motion sensor is located inside.
+    console.log(`--> Wind Speed is: ${windSpeed}`);
     setTimeout(() => {
       if (motionOn) {
         console.log(`--> Something really wrong...`);
         captureAndUpload();
       }
-    }, windSpeed > 10 ? 30000 : debounceTime);
+    }, windSpeed > 8 ? 30000 : debounceTime);
   });
 
   // "motionend" events are fired following a "motionstart" event
@@ -108,7 +111,7 @@ function captureAndUpload() {
 
 function postDataToIFTTT(fileUrl) {
   fetch(
-    'https://maker.ifttt.com/trigger/mailbox/with/key/gfEtP72iHNe_lGN6BoyVAYze9VRVfInneBGwXWpVzok',
+    'https://maker.ifttt.com/trigger/mailbox/with/key/gfEtP72iHNe_lGN6BoyVAXXXP7FtH0jMT0TVfrE-T7_',
     {
       method: 'POST',
       body: `{"value1":"${fileUrl}"}`,
@@ -119,11 +122,15 @@ function postDataToIFTTT(fileUrl) {
 }
 
 function getWeather() {
+  console.log(`--> Getting weather`);
   const apiKey = "bcd076b2b09ab4811091acbb32bd8cf7";
   const city = "5392593" // "San Ramon,US";
   const url = `http://api.openweathermap.org/data/2.5/weather?id=${city}&appid=${apiKey}`;
 
   return fetch(url)
     .then(res => res.json())
-    .then(data => data.wind.speed);
+    .then(data => {
+      console.log(`--> Weather data: `, data.wind);
+      return data.wind.speed;
+    });
 }
