@@ -27,8 +27,8 @@ board.on('ready', () => {
 
 function sendSMS() {
   // Twillio Phone#: +1(732) 587-7904
-  const accountSid = 'ACe6c61ecae321ac52641199de71dff37b';
-  const authToken = '28f6a83ad3dc01ee061bc0bab81921d2';
+  const accountSid = '<accountSid>';
+  const authToken = '<authToken>';
   const client = require('twilio')(accountSid, authToken);
 
   client.messages
