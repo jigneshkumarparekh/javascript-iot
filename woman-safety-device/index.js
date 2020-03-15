@@ -1,8 +1,15 @@
+// NOTE: Please create "twillio.env" file in root directory of the project
+
 'use strict';
 const five = require('johnny-five');
 const Tessel = require('tessel-io');
 const fetch = require('node-fetch');
 const chalk = require('chalk');
+const path = require('path');
+
+// Load the environment variable for twillio
+// NOTE: Please check if "twillio.env" file exists as it's not checked in to the repo.
+require('dotenv').config({ path: path.join(__dirname, 'twilio.env')});
 
 const board = new five.Board({
   io: new Tessel()
@@ -27,16 +34,19 @@ board.on('ready', () => {
 
 function sendSMS() {
   // Twillio Phone#: +1(732) 587-7904
-  const accountSid = '<accountSid>';
-  const authToken = '<authToken>';
+  // NOTE: Please check if "twillio.env" file exists as it's not checked in to the repo.
+  const accountSid = process.env.TWILIO_ACCOUNT_SID;
+  const authToken = process.env.TWILIO_AUTH_TOKEN;
+  console.log(`--> accountSid: `, accountSid);
+  console.log(`--> authToken: `, authToken);
   const client = require('twilio')(accountSid, authToken);
 
   client.messages
     .create({
-       body: 'Hello from Node!',
-       from: '+17325877904',
-       to: '+19255351340'
-     })
+      body: 'Testing message for safety device. Please check youe Life360 app for my location.',
+      from: '+17325877904',
+      to: '+19255351340'
+    })
     .then(message => console.log(message.sid));
 }
 
@@ -50,5 +60,5 @@ function postDataToIFTTT() {
       headers: { 'Content-Type': 'application/json' }
     }
   )
-  .then(() => console.log(chalk.green(`--> Data posted to IFTTT - Webhooks for event "${eventName}"`)));
+    .then(() => console.log(chalk.green(`--> Data posted to IFTTT - Webhooks for event "${eventName}"`)));
 }
