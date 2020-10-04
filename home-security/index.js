@@ -10,7 +10,7 @@ const chalk = require('chalk');
 
 const uploadFiles = require('./upload-file');
 
-let debounceTime = 10000, lastImageCaptureTime, isUploading = false, motionOn = false;
+let debounceTime = 20000, lastImageCaptureTime, isUploading = false, motionOn = false;
 
 const board = new five.Board({
   io: new Tessel()
@@ -18,13 +18,13 @@ const board = new five.Board({
 
 
 board.on('ready', async () => {
-  console.log(`--> Tessel 2 board is ready...`);
+  console.log(`--> ${getCurrentDateTime()}: Tessel 2 board is ready...`);
 
   let windSpeed = await getWeather();
   setInterval(async () => {
-    console.log(`--> Getting new weather...`);
+    console.log(`--> ${getCurrentDateTime()}: Getting weather`);
     windSpeed = await getWeather();
-    console.log(`--> Got new weather data > ${windSpeed}`);
+    console.log(`--> ${getCurrentDateTime()}: Got new weather data > ${windSpeed}`);
   }, 660000); // 11 min.
 
   // Create a new `motion` hardware instance.
@@ -34,34 +34,40 @@ board.on('ready', async () => {
 
   // "calibrated" occurs once, at the beginning of a session,
   motion.on("calibrated", () => {
-    console.log("--> calibrated");
+    console.log(`--> ${getCurrentDateTime()}: calibrated`);
   });
 
   // "motionstart" events are fired when the "calibrated"
   // proximal area is disrupted, generally by some form of movement
   motion.on("motionstart", async () => {
     motionOn = true;
-    console.log("--> Motion start");
+    console.log(`--> ${getCurrentDateTime()}: Motion start`);
 
     // Check if motion is still on after X seconds to prevent the false alarm.
     // This is not needed if motion sensor is located inside.
-    console.log(`--> Wind Speed is: ${windSpeed}`);
+    const timeoutInterval = windSpeed > 8 ? 45000 : debounceTime
+    console.log(`--> Wind Speed is: ${windSpeed} || Timeout interval: ${timeoutInterval}`);
     setTimeout(() => {
+      console.log(`--> ${getCurrentDateTime()}: Inside setTimeout: ${motionOn}`);
       if (motionOn) {
-        console.log(`--> Something really wrong...`);
+        console.log(`--> ${getCurrentDateTime()}: Something really wrong...`);
         captureAndUpload();
       }
-    }, windSpeed > 8 ? 30000 : debounceTime);
+    }, timeoutInterval);
   });
 
   // "motionend" events are fired following a "motionstart" event
   // when no movement has occurred in X ms
   motion.on("motionend", () => {
     motionOn = false;
-    console.log("--> Motion end");
+    console.log(`--> ${getCurrentDateTime()}: Motion end`);
   });
 
 });
+
+function getCurrentDateTime() {
+  return (new Date()).toLocaleString();
+}
 
 function captureAndUpload() {
 
@@ -122,7 +128,6 @@ function postDataToIFTTT(fileUrl) {
 }
 
 function getWeather() {
-  console.log(`--> Getting weather`);
   const apiKey = "bcd076b2b09ab4811091acbb32bd8cf7";
   const city = "5392593" // "San Ramon,US";
   const url = `http://api.openweathermap.org/data/2.5/weather?id=${city}&appid=${apiKey}`;
