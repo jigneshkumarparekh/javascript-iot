@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Wifi Lock</title>
+  <script type="text/javascript">
+    function action(event) {
+      const button = event.target;
+      const act = button.getAttribute('data-action');
+      console.log(`--> Executing action: ${act}`);
+      switch(act) {
+        case 'lock':
+          makeXHR('/lock');
+          break;
+        case 'unlock':
+          makeXHR('/unlock');
+          break;
+      }
+    }
+
+    function makeXHR(url) {
+      // Create a new XHR for communicating requests to our Tessel server
+      var req = new XMLHttpRequest();
+
+      req.open('POST', url);
+
+      req.onload = function(e) {
+        if (req.readyState == 4 && req.status == 200) {
+          console.log(`--> Success: `);
+        } else {
+          console.log('Error', e); // If something went wrong, log that event to the console.
+        }
+      }
+      req.send(''); // Send our request to the server
+    }
+  </script>
+</head>
+<body>
+  <div style="text-align: center; margin: 50px;">
+    <button onclick="action(event);" data-action="lock"> Lock </button>
+    <button onclick="action(event);" data-action="unlock"> Unlock </button>
+  </div>
+</body>
+</html>
