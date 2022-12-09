@@ -4,7 +4,7 @@
   "description": "Tessel project",
   "main": "index.js",
   "dependencies": {
-    "express": "^4.16.4",
+    "express": "^4.17.3",
     "firmata": "^2.0.0",
     "http": "0.0.0",
     "johnny-five": "^1.0.0",
